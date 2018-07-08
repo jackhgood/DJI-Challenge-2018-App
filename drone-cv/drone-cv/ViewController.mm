@@ -18,6 +18,9 @@
   #include <opencv2/objdetect/objdetect.hpp>
   #include <opencv2/video/tracking.hpp>
 #include "MagicInAir.h"
+#include <math.h>
+#include <list>
+#include <iostream>
 using namespace std;
 #endif
 
@@ -26,7 +29,7 @@ using namespace std;
 
 #define weakSelf(__TARGET__) __weak typeof(self) __TARGET__=self
 #define weakReturn(__TARGET__) if(__TARGET__==nil)return;
-
+std::list<int> IDsOrder;
 
 @interface ViewController()<DJIVideoFeedListener, DJISDKManagerDelegate>
 {
@@ -387,6 +390,10 @@ using namespace std;
         [self.spark setVerticleModeToAbsoluteHeight];
         
         self.imgProcType = IMG_PROC_USER_1;
+        //here push the ids from last to first that we want to do
+        IDsOrder.push_back (100);
+        IDsOrder.push_back (200);
+        IDsOrder.push_back (300);
         
         // This is a timer callback function that will run repeatedly when button is clicked
         self.processFrame =
@@ -412,37 +419,58 @@ using namespace std;
 
             // Implement your logic to decide where to move the drone
             // Below snippet is an example of how you can calcualte the center of the marker
-//            cv::Point2f marker_center(0,0);
-//            bool tag_for_takeoff = FALSE;
-//            for(auto i=0;i<n;i++)
-//            {
-//                std::cout<<"\nID: "<<ids[i];
-//                // This function calculate the average marker center from all the detected tags
-//                marker_center = VectorAverage(corners[i]);
-//            }
+            cv::Point2f marker_center(0,0);
+            bool tag_for_takeoff = FALSE;
+            bool toward_tag= FALSE; //TRUE if going toward a tag
+            
+            //find the marker center for the updated first point
+            for(auto i=0;i<n;i++)
+            {
+                std::cout<<"\nID: "<<ids[i];
+                // This function calculate the center of the next marker
+                if(IDsOrder.front() == ids[i])
+                {
+                    marker_center = VectorAverage(corners[i]);
+                    toward_tag = TRUE;
+                }
+            }
             
             // Codes commented below show how to drive the drone to move to the direction
             // such that desired tag is in the center of image frame
             
             // Calculate the image vector relative to the center of the image
-//            cv::Point2f image_vector = marker_center-cv::Point2f(240,180);
+            cv::Point2f image_vector = marker_center-cv::Point2f(240,180);
             
             // Convert vector from image coordinate to drone navigation coordinate
-//            cv::Point2f motion_vector = convertImageVectorToMotionVector(image_vector);
+            cv::Point2f motion_vector = convertImageVectorToMotionVector(image_vector);
             
-            // If there's no tag detected, no motion required
-//            if(n==0){
-//                motion_vector = cv::Point2f(0,0);
-//            }
+            // If can't see nearest tag, don't go full speed
+            
+            float move_thresh = 0.1;
+            if(toward_tag == FALSE){
+                motion_vector = cv::Point2f(0,0);
+            }
             
             // Use MoveVxVyYawrateVz(...) or MoveVxVyYawrateHeight(...)
             // depending on the mode you choose at the beginning of this function
-//            if((image_vector.x*image_vector.x + image_vector.y*image_vector.y)<900)
-//                MoveVxVyYawrateVz(spark_ptr, motion_vector.x, motion_vector.y, 0, -0.2);
-//            else
-//                MoveVxVyYawrateVz(spark_ptr, motion_vector.x, motion_vector.y, 0, 0);
+            float vector_len = sqrt(motion_vector.x*motion_vector.x + motion_vector.y*motion_vector.y);
+            motion_vector.x = motion_vector.x * 0.5 / vector_len;
+            motion_vector.y = motion_vector.y * 0.5 / vector_len;
+            if((image_vector.x*image_vector.x + image_vector.y*image_vector.y)<900)
+            {
+                MoveVxVyYawrateVz(spark_ptr, motion_vector.x, motion_vector.y, 0, 0);
+            }
+            else
+            {
+                MoveVxVyYawrateVz(spark_ptr, motion_vector.x, motion_vector.y, 0, 0);
+            }
 
-//            std::cout<<"Moving By::"<<motion_vector<<"\n";
+            std::cout<<"Moving By::"<<motion_vector<<"\n";
+            
+            if(toward_tag && vector_len < 0.3){
+                std::cout<<"Tag hit"<<
+                IDsOrder.pop_front();
+            }
             
             // Move the camera to look down so you can see the tags
             PitchGimbal(spark_ptr,-75.0);
