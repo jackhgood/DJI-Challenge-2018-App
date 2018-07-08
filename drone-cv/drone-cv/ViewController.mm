@@ -630,7 +630,7 @@ using namespace std;
         
         
         // Please measure the marker size in Meter and enter it here
-        const float markerSizeMeter = 0.13;
+        const float markerSizeMeter = 0.162;
         const float halfSize = markerSizeMeter * 0.5;
         
         // Self-defined tag location in 3D, this is used in step 2 below
@@ -699,16 +699,35 @@ using namespace std;
             cv::Mat grayImg = [OpenCVConversion cvMatGrayFromUIImage:frame];
 
             // Do your magic!!!
+            vector< int > markerIds;
+            vector< vector<Point2f> > markerCorners;
+            cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+            cv::aruco::detectMarkers(colorImg, dictionary, markerCorners, markerIds);
+            
+            if(!markerIds.empty()) {
+                cv::Mat tvec, rvec;
+                cv::solvePnP(objPoints, markerCorners[0], intrinsic, distortion, rvec, tvec);
+                vector< Point2f > imagePoints;
+                cv::projectPoints(objectPoints, rvec, tvec, intrinsic, distortion, imagePoints);                vector< Point2f >::const_iterator begin = imagePoints.begin();
+                vector< Point2f >::const_iterator middle = imagePoints.begin() + 4;
+                vector< Point2f >::const_iterator end = imagePoints.begin() + 8;
+                vector< Point2f > src(begin, middle);
+                vector< Point2f > dst(middle, end);
+                Point2f srcarr[] = {Point2f(0, logo.rows), Point2f(logo.cols, logo.rows), Point2f(logo.cols, 0), Point2f(0, 0)};
+                vector<Point2f> src1(srcarr, srcarr + 4);
+                cv::Mat H = cv::findHomography(src1, dst);
+                cv::Mat logoWarped;
+                cv::warpPerspective(logo, logoWarped, H, colorImg.size());
                 
-                
-            // Hint how to overlay warped logo onto the original camera image
-//            cv::Mat gray,grayInv,src1Final,src2Final;
-//            cvtColor(logoWarped,gray,CV_BGR2GRAY);
-//            threshold(gray,gray,0,255,CV_THRESH_BINARY);
-//            bitwise_not(gray, grayInv);
-//            colorImg.copyTo(src1Final,grayInv);
-//            logoWarped.copyTo(src2Final,gray);
-//            colorImg = src1Final+src2Final;
+                // Hint how to overlay warped logo onto the original camera image
+                cv::Mat gray,grayInv,src1Final,src2Final;
+                cvtColor(logoWarped,gray,CV_BGR2GRAY);
+                threshold(gray,gray,0,255,CV_THRESH_BINARY);
+                bitwise_not(gray, grayInv);
+                colorImg.copyTo(src1Final,grayInv);
+                logoWarped.copyTo(src2Final,gray);
+                colorImg = src1Final+src2Final;
+            }
             
             cv::cvtColor(colorImg, colorImg, CV_BGR2RGB);
             [self.viewProcessed setImage:[OpenCVConversion UIImageFromCVMat:colorImg]];
