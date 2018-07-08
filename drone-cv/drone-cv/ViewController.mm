@@ -468,7 +468,7 @@ std::list<int> IDsOrder;
             std::cout<<"Moving By::"<<motion_vector<<"\n";
             
             if(toward_tag && vector_len < 0.3){
-                std::cout<<"Tag hit"<<
+                //std::cout<<"Tag hit"<<
                 IDsOrder.pop_front();
             }
             
