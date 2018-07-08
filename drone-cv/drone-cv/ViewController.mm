@@ -391,9 +391,10 @@ std::list<int> IDsOrder;
         
         self.imgProcType = IMG_PROC_USER_1;
         //here push the ids from last to first that we want to do
-        IDsOrder.push_back (100);
-        IDsOrder.push_back (200);
-        IDsOrder.push_back (300);
+        for(auto i=1;i<18;i++)
+        {
+            IDsOrder.push_back (18-i);
+        }
         
         // This is a timer callback function that will run repeatedly when button is clicked
         self.processFrame =
@@ -426,10 +427,11 @@ std::list<int> IDsOrder;
             //find the marker center for the updated first point
             for(auto i=0;i<n;i++)
             {
-                std::cout<<"\nID: "<<ids[i];
+                //std::cout<<"\nID: "<<ids[i];
                 // This function calculate the center of the next marker
                 if(IDsOrder.front() == ids[i])
                 {
+                    std::cout<<IDsOrder.front()<<std::endl;
                     marker_center = VectorAverage(corners[i]);
                     toward_tag = TRUE;
                 }
@@ -465,10 +467,10 @@ std::list<int> IDsOrder;
                 MoveVxVyYawrateVz(spark_ptr, motion_vector.x, motion_vector.y, 0, 0);
             }
 
-            std::cout<<"Moving By::"<<motion_vector<<"\n";
+            //std::cout<<"Moving By::"<<motion_vector<<"\n";
             
-            if(toward_tag && vector_len < 0.3){
-                std::cout<<"Tag hit"<<
+            if(toward_tag && vector_len < 2){
+                std::cout<<"Tag hit"<<std::endl;
                 IDsOrder.pop_front();
             }
             
