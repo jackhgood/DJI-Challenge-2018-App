@@ -371,6 +371,8 @@ using namespace std;
         self.imgProcType = IMG_PROC_DEFAULT;
         self.processFrame = self.defaultProcess;
         self.debug2.text = @"Default";
+        
+        [self.spark exitVirtualStickMode];
     }
     else
     {
