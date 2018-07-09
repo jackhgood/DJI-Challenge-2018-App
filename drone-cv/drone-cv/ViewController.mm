@@ -424,8 +424,9 @@ std::list<int> IDsOrder;
             bool tag_for_takeoff = FALSE;
             bool toward_tag= FALSE; //TRUE if going toward a tag
             
-            if(IDsOrder.empty()) {
+            if(!IDsOrder.empty()) {
                 //find the marker center for the updated first point
+                std::cout<<IDsOrder.front()<<endl;
                 for(auto i=0;i<n;i++)
                 {
                     //std::cout<<"\nID: "<<ids[i];
@@ -455,12 +456,16 @@ std::list<int> IDsOrder;
             if(toward_tag == FALSE){
                 motion_vector = cv::Point2f(0,0);
             }
-            
+            std::cout<<motion_vector<<endl;
+           
             // Use MoveVxVyYawrateVz(...) or MoveVxVyYawrateHeight(...)
             // depending on the mode you choose at the beginning of this function
             float vector_len = sqrt(motion_vector.x*motion_vector.x + motion_vector.y*motion_vector.y);
-            motion_vector.x = motion_vector.x * 0.5 / vector_len;
-            motion_vector.y = motion_vector.y * 0.5 / vector_len;
+            //std::cout<<vector_len<<endl;
+            if(vector_len != 0){
+                motion_vector.x = motion_vector.x * 0.5 / vector_len;
+                motion_vector.y = motion_vector.y * 0.5 / vector_len;
+            }
             if((image_vector.x*image_vector.x + image_vector.y*image_vector.y)<900)
             {
                 MoveVxVyYawrateVz(spark_ptr, motion_vector.x, motion_vector.y, 0, 0);
@@ -470,9 +475,9 @@ std::list<int> IDsOrder;
                 MoveVxVyYawrateVz(spark_ptr, motion_vector.x, motion_vector.y, 0, 0);
             }
 
-            std::cout<<"Moving By::"<<motion_vector<<"\n";
+            //std::cout<<"Moving By::"<<motion_vector<<"\n";
             
-            if(toward_tag && vector_len < 0.1){
+            if(toward_tag && vector_len < 40){
                 std::cout<<"Tag hit"<<std::endl;
                 IDsOrder.pop_front();
                 if(IDsOrder.empty())
