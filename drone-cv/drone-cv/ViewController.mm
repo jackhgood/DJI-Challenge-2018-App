@@ -741,9 +741,10 @@ std::list<int> IDsOrder;
             cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
             cv::aruco::detectMarkers(colorImg, dictionary, markerCorners, markerIds);
             
-            if(!markerIds.empty()) {
+            for(int i = 0; i < markerIds.size(); i++) {
+                std::cout << markerIds[i] << std::endl;
                 cv::Mat tvec, rvec;
-                cv::solvePnP(objPoints, markerCorners[0], intrinsic, distortion, rvec, tvec);
+                cv::solvePnP(objPoints, markerCorners[i], intrinsic, distortion, rvec, tvec);
                 vector< Point2f > imagePoints;
                 cv::projectPoints(objectPoints, rvec, tvec, intrinsic, distortion, imagePoints);                vector< Point2f >::const_iterator begin = imagePoints.begin();
                 vector< Point2f >::const_iterator middle = imagePoints.begin() + 4;
@@ -765,6 +766,7 @@ std::list<int> IDsOrder;
                 logoWarped.copyTo(src2Final,gray);
                 colorImg = src1Final+src2Final;
             }
+            std::cout << std::endl;
             
             cv::cvtColor(colorImg, colorImg, CV_BGR2RGB);
             [self.viewProcessed setImage:[OpenCVConversion UIImageFromCVMat:colorImg]];
