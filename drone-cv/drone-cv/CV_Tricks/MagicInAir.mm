@@ -84,8 +84,8 @@ cv::Point2f VectorAverage(std::vector<cv::Point2f>& corners){
 
 cv::Point2f convertImageVectorToMotionVector(cv::Point2f im_vector){
     cv::Point2f p(-im_vector.y,im_vector.x);
-    p=p/std::sqrt(p.x*p.x + p.y*p.y);
-    p = 0.2*p;
+    //p=p/std::sqrt(p.x*p.x + p.y*p.y);
+    //p = 0.2*p;
     return p;
 }
 
